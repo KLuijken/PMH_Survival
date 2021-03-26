@@ -63,18 +63,5 @@ list(
 )
 
 
-# make_figure_maintext()
+# add: make_figure_maintext()
 
-
-
-### dgms are sequential (take input previous)
-# Target: data, no censoring
-# Target: data, administrative censoring
-# Target: data, administrative + random censoring
-### allen onder verschillende meetheterogeniteit
-# sys additive scenarios
-# sys multiplicative scenarios
-# random scenarios
-
-
-# Two sets of targets (simulations and sensitivity method)

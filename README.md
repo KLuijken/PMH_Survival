@@ -9,21 +9,21 @@ The goal of the simulation is to illustrate the impact of predictor measurement 
 
 The structure of this simulation is based on the R package targets by William Michael Landau. See https://docs.ropensci.org/targets/ for more information.
 
-├── .gitignore
-├── CITATION.md
-├── LICENSE.md
-├── README.md
-├── targets. R                    <- make file to execute project
-├── targets                       <- storage of simulation targets
-├── data                          <- processed simulation output (.rds files)
-├── plot                          <- final results of simulation
-└── R                             <- source code for this project
-    ├── analysis                  <- helper script to perform model derivation and validation
-    ├── dgm                       <- helper script that defines the data-generating-mechanisms for the simulation
-    ├── scenarios                 <- helper script that defines the scenarios of predictor measurement heterogeneity evaluated in the simulation
-    ├── target_structure_additive <- helper script to structure targets for targets.R file
-    ├── target_structure_multiplicative <- helper script to structure targets for targets.R file
-    └── target_structure_random   <- helper script to structure targets for targets.R file
+├── .gitignore  
+├── CITATION.md  
+├── LICENSE.md  
+├── README.md  
+├── targets. R                    <- make file to execute project  
+├── targets                       <- storage of simulation targets  
+├── data                          <- processed simulation output (.rds files)  
+├── plot                          <- final results of simulation  
+└── R                             <- source code for this project  
+    ├── analysis                  <- helper script to perform model derivation and validation  
+    ├── dgm                       <- helper script that defines the data-generating-mechanisms for the simulation  
+    ├── scenarios                 <- helper script that defines the scenarios of predictor measurement heterogeneity evaluated in the simulation  
+    ├── target_structure_additive <- helper script to structure targets for targets.R file  
+    ├── target_structure_multiplicative <- helper script to structure targets for targets.R file  
+    └── target_structure_random   <- helper script to structure targets for targets.R file  
 
 
 

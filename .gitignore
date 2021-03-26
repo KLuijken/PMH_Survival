@@ -11,4 +11,4 @@
 # produced files
 data/*.rds
 plot/*.pdf
-
+_targets/

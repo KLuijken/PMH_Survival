@@ -14,7 +14,9 @@ model_validation <- function( predictor,
   # evaluate IPA using riskRegression package
   IPA <- IPA( mod,
               formula = Surv( time_event, event) ~ 1,
-              newdata = data,
+              newdata = data.frame( time_event = data$time_event,
+                                    X = data[, predictor],
+                                    event = data$time_event <= t_val),
               times = t_val)$IPA[2]
   
   # evaluate time-dependent cumulative c-statistic using timeROC package
@@ -109,3 +111,20 @@ analyse_data <- function( data){
   
   return(results)
 }
+
+
+one_sim_scenario <- function( n_obs, 
+                              psi, 
+                              theta,
+                              sigma_epsilon,
+                              pmh_type = pmh_type){
+  data_sets <- generate_data( n_obs = n_obs, 
+                              psi = psi, 
+                              theta = theta, 
+                              sigma_epsilon = sigma_epsilon)
+  results   <- purrr::map_df( data_sets, analyse_data, .id = "censoring_mechanism")
+  results   <- cbind( psi, theta, sigma_epsilon, pmh_type, results)
+  
+  return( results)
+}
+

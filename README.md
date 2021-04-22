@@ -21,10 +21,7 @@ The structure of this simulation is based on the R package targets by William Mi
 └── R                                   <- source code for this project  
     ├── analysis                        <- helper script to perform model derivation and validation  
     ├── dgm                             <- helper script that defines the data-generating-mechanisms for the simulation  
-    ├── scenarios                       <- helper script that defines the scenarios of predictor measurement heterogeneity evaluated in the simulation  
-    ├── target_structure_additive       <- helper script to structure targets for targets.R file  
-    ├── target_structure_multiplicative <- helper script to structure targets for targets.R file  
-    └── target_structure_random         <- helper script to structure targets for targets.R file  
+    └── scenarios                       <- helper script that defines the scenarios of predictor measurement heterogeneity evaluated in the simulation  
 
 ```
 

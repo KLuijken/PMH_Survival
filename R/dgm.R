@@ -14,21 +14,21 @@ generate_data_no_cens <- function( n_obs  = 1000000,
                                    sigma_epsilon,
                                    lambda_event = 0.1,
                                    betas_event  = log( 2)){
-  # Generate underlying "true" X0 that is measured using procedure X and W
-  X0 <- rnorm( n_obs, mean = 0, sd = 1.2)
+  # Generate underlying "true" V that is measured using procedure X and W
+  V <- rnorm( n_obs, mean = 0, sd = 1.2)
   
   # Generate predictor measurement procedures X and W
-  X  <- X0 + rnorm( n_obs, mean = 0, sd = 1)
-  W  <- psi + theta * X0 + rnorm( n_obs, mean = 0, sd = sigma_epsilon)
+  X  <- V + rnorm( n_obs, mean = 0, sd = 1)
+  W  <- psi + theta * V + rnorm( n_obs, mean = 0, sd = sigma_epsilon)
   
   # Generate survival times from exponential distribution
   U          <- runif( n_obs)
-  time_event <- -log( U) / ( lambda_event * exp( X0 * betas_event))
+  time_event <- -log( U) / ( lambda_event * exp( V * betas_event))
   event      <- rep( 1, times = n_obs)
   
-  data <- data.frame( time_event, event, X, W)
+  sim_data <- data.frame( time_event, event, X, W)
   
-  return(data)
+  return( sim_data)
 }
 
 
@@ -53,10 +53,9 @@ generate_data_admin_cens <- function(data_no_censoring,
 generate_data_random_cens <- function( data_admin_censoring,
                                        data_no_censoring,
                                        lambda_cens = 0.01,
-                                       betas_cens = log(3)
+                                       betas_cens = log(3),
+                                       n_obs
                                        ){
-  n_obs <- nrow( data_no_censoring)
-  
   # Generate censoring times based on uniform distribution
   U_cens      <- runif( n_obs)
   X_cens      <- rnorm( n_obs)
@@ -80,14 +79,15 @@ generate_data <- function( n_obs,
                            psi,
                            theta,
                            sigma_epsilon){
-  no_censoring   <- generate_data_no_cens( n_obs       = n_obs,
-                                         psi           = psi,
-                                         theta         = theta,
-                                         sigma_epsilon = sigma_epsilon)
+  no_censoring   <- generate_data_no_cens( n_obs         = n_obs,
+                                           psi           = psi,
+                                           theta         = theta,
+                                           sigma_epsilon = sigma_epsilon)
   administrative <- generate_data_admin_cens( data_no_censoring = no_censoring,
                                               c_admin = 15)
   random         <- generate_data_random_cens( data_admin_censoring = administrative,
-                                               data_no_censoring = no_censoring)
+                                               data_no_censoring = no_censoring,
+                                               n_obs             = n_obs)
   
   data <- list( no_censoring   = no_censoring,
                 administrative = administrative,

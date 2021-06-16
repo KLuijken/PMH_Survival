@@ -5,7 +5,7 @@ library(tarchetypes)
 source( "./R/scenarios_pmh.R")
 source( "./R/dgm.R")
 source( "./R/analysis.R")
-#source( "./R/plotting.R")
+#source( "./simulations/R/plotting.R")
 
 # Set target-specific options such as packages.
 tar_option_set( packages = c( "tidyverse",
@@ -33,7 +33,8 @@ simulation_body <- tar_map(
                                 psi = psi,
                                 theta = theta,
                                 sigma_epsilon = sigma_epsilon,
-                                pmh_type = pmh_type))
+                                pmh_type = pmh_type,
+                                t_val = 6.5))
 )
 
 # Build pipeline

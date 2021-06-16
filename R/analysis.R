@@ -48,7 +48,10 @@ model_validation <- function( predictor,
                                                sim_data$time_event,
                                                t_val),
                           X = sim_data[ , predictor],
-                          event = as.numeric( sim_data$time_event <= t_val))
+                          event = ifelse( sim_data$event == 1 & 
+                                            sim_data$time_event <= t_val,
+                                          1,
+                                          0))
   
   # expected number of events at t_val based on martingale residuals
   expect <- if( class( mod)[1] == "coxph"){

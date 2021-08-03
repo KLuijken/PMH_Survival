@@ -14,16 +14,13 @@ generate_data_no_cens <- function( n_obs  = 1000000,
                                    sigma_epsilon,
                                    lambda_event = 0.1,
                                    betas_event  = log( 2)){
-  # Generate underlying "true" V that is measured using procedure X and W
-  V <- rnorm( n_obs, mean = 0, sd = 1.2)
-  
   # Generate predictor measurement procedures X and W
-  X  <- V + rnorm( n_obs, mean = 0, sd = 1)
-  W  <- psi + theta * V + rnorm( n_obs, mean = 0, sd = sigma_epsilon)
+  X  <- rnorm( n_obs, mean = 0, sd = 1)
+  W  <- psi + theta * X + rnorm( n_obs, mean = 0, sd = sigma_epsilon)
   
   # Generate survival times from exponential distribution
   U          <- runif( n_obs)
-  time_event <- -log( U) / ( lambda_event * exp( V * betas_event))
+  time_event <- -log( U) / ( lambda_event * exp( X * betas_event))
   event      <- rep( 1, times = n_obs)
   
   sim_data <- data.frame( time_event, event, X, W)
@@ -57,8 +54,8 @@ generate_data_random_cens <- function( data_admin_censoring,
                                        n_obs
                                        ){
   # Generate censoring times based on uniform distribution
-  U_cens      <- runif( n_obs)
-  X_cens      <- rnorm( n_obs)
+  U_cens      <- runif( n_obs, min = 0, max = 1)
+  X_cens      <- rnorm( n_obs, mean = 0, sd = 1)
   time_cens   <- -log( U_cens) / ( lambda_cens * exp( betas_cens * X_cens))
   
   # rename dataframe

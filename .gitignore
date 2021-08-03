@@ -9,6 +9,6 @@
 .Rproj.user/
 
 # produced files
-data/*.rds
-plot/*.pdf
-_targets/
+simulations/data/*.rds
+simulations/plot/*.pdf
+simulations/_targets/

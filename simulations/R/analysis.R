@@ -5,31 +5,34 @@
 # Analyse data
 # -----------------------------------------------------------------------------#
 
-# Helper function: perform model validation
-
-model_validation <- function( predictor,
-                              mod,
-                              mod_name,
-                              sim_data,
-                              t_val
-                              ){
+# Helper function for model validation
+validate_model <- function( mod,
+                            sim_data,
+                            t_val
+                            ){
+  # change predictor name W to X
+  validation_data <- data.frame( time_event = sim_data$time_event,
+                                 event = sim_data$event,
+                                 X = sim_data$W)
   
-  # store parameters for parametric survival model
-  if( class( mod)[1] != "coxph"){
-    # use minus sign for aft models fitted by rms::psm()
-    lambda_hat <- unname( -mod$coefficients[1])
-    beta_hat   <- unname( -mod$coefficients[2]) 
-  }
-  
-  # linear predictor at t_val
-  lp     <- if( class( mod)[1] == "coxph"){
-    sim_data[ , predictor] * mod$coefficients[1] - mean( sim_data[ , predictor]) * mod$coefficients[1]} else{
-      lambda_hat + sim_data[ , predictor] * beta_hat - mean( sim_data[ , predictor]) * beta_hat}
+  # linear predictor
+  # lp     <- if( class( mod)[1] == "coxph"){
+  #   sim_data$W * mod$coefficients[1]} else{
+  #     lambda_hat + sim_data$W * beta_hat }
+  lp <- if( class( mod)[1] == "coxph"){
+        predict( mod, 
+                 newdata = validation_data,
+                 type = "lp")}else{
+                   -predict( mod, 
+                            newdata = validation_data,
+                            type = "lp")  
+                 }
+                   
 
   # evaluate IPA using riskRegression package
   IPA <- IPA( mod,
               formula = Surv( time_event, event) ~ 1,
-              newdata = sim_data,
+              newdata = validation_data,
               times = t_val)$IPA[2]
   
   # evaluate time-dependent cumulative c-statistic using timeROC package
@@ -39,118 +42,53 @@ model_validation <- function( predictor,
                              marker = lp,
                              times = t_val)$AUC[2])
   
-  # evaluate calibration using Poisson calibration model as in Crowson et al. (2016, SMMR)
-  # number of events before time = t_val
+  # take marginal predicted risk
+  pred_risk <- 1 - mean( pec::predictSurvProb( mod, newdata = validation_data, times = t_val))
+  obs_risk <- 1 - summary( survfit( Surv( time_event, event) ~ 1, data = sim_data), times= t_val)$surv
   
-  # create data.frame with event time trimmed after t_val (all event times > t_val
-  # are substituted by t_val) and with events censored after t_val.
-  data_new <- data.frame( time_event = ifelse( sim_data$time_event <= t_val,
-                                               sim_data$time_event,
-                                               t_val),
-                          X = sim_data[ , predictor],
-                          event = ifelse( sim_data$event == 1 & 
-                                            sim_data$time_event <= t_val,
-                                          1,
-                                          0))
-  
-  # expected number of events at t_val based on martingale residuals
-  expect <- if( class( mod)[1] == "coxph"){
-    predict( mod, type = "expected", newdata = data_new)} else{
-      data_new$time_event * exp( lp)} 
-  expect <- ifelse( expect == 0, .0001, expect) # issues with log(0)
-  expect <- log( expect)
-  
-  # calibration in the large coefficient
-  cal_large <- glm( event ~ offset( expect),
-                    data = data_new,
-                    family = poisson)$coefficients[1]
-
-  # calibration slope
-  cal_slope <- glm( event ~ lp + offset( expect - lp),
-                    data = data_new,
-                    family = poisson)$coefficients[2]
+  cal_large <- obs_risk / pred_risk 
   
   results <- data.frame( matrix( c( IPA,
                                     c_stat,                       
-                                    cal_large,
-                                    cal_slope),
+                                    cal_large),
                                  nrow = 1)
   )
   colnames(results) <- c("IPA",
                          "c_stat",
-                         "cal_large",
-                         "cal_slope")
-  results$pred <- predictor
-  results$model<- mod_name
+                         "cal_large")
+  results$model<- ifelse( class( mod)[1] == "coxph", "mod_cox", "mod_exp")
   
   return(results)
 }
 
 
-# Helper function: derive and validate model
-
-analyse_data <- function( sim_data,
-                          t_val){
-  # derive survreg parametric model based on X
-  mod_exp   <- rms::psm( Surv( time_event, event) ~ X,
-                         dist = "exponential",
-                         data = sim_data,
-                         x = T, # return design matrix
-                         y = T # return Surv() matrix
-  )
-  
-  results_x_exp <- model_validation( predictor = "X",
-                                     mod = mod_exp,
-                                     mod_name = "mod_exp",
-                                     sim_data = sim_data,
-                                     t_val = t_val)
-  
-  results_w_exp <- model_validation( predictor = "W",
-                                     mod = mod_exp,
-                                     mod_name = "mod_exp",
-                                     sim_data = sim_data,
-                                     t_val = t_val)
-  
-  # derive survreg Cox model based on X
-  mod_cox   <- coxph( Surv( time_event, event) ~ X,
-                      data = sim_data,
-                      x = T,
-                      y = T)
-  
-  results_x_cox <- model_validation( predictor = "X",
-                                     mod = mod_cox,
-                                     mod_name = "mod_cox",
-                                     sim_data = sim_data,
-                                     t_val = t_val)
-  
-  results_w_cox <- model_validation( predictor = "W",
-                                     mod = mod_cox,
-                                     mod_name = "mod_cox",
-                                     sim_data = sim_data,
-                                     t_val = t_val)
-                         
-  results <- rbind( results_x_exp,
-                    results_w_exp,
-                    results_x_cox,
-                    results_w_cox)
-  
-  return(results)
-}
-
-# Workhorse for analysis
+# Workhorse for validation analysis
 
 one_sim_scenario <- function( n_obs, 
                               psi, 
                               theta,
                               sigma_epsilon,
-                              pmh_type = pmh_type,
+                              mod,
                               t_val){
-  data_sets <- generate_data( n_obs = n_obs, 
-                              psi = psi, 
-                              theta = theta, 
-                              sigma_epsilon = sigma_epsilon)
-  results   <- purrr::map_df( data_sets, analyse_data, t_val = t_val, .id = "censoring_mechanism")
-  results   <- cbind( psi, theta, sigma_epsilon, pmh_type, results)
+  # generate validation/implementation data containing predictor W
+  data_sets_val <- generate_data( n_obs = n_obs, 
+                                  psi = psi, 
+                                  theta = theta, 
+                                  sigma_epsilon = sigma_epsilon)
+  # store descriptives
+  val_mean <- purrr:::map_df( data_sets_val, function(x) apply( x, 2, mean))
+  colnames( val_mean) <- paste0( colnames( val_mean), "_mean")
+  val_median <- purrr:::map_df( data_sets_val, function(x) apply( x, 2, median))
+  colnames( val_median) <- paste0( colnames( val_median), "_median")
+  val_sd <- purrr:::map_df( data_sets_val, function(x) apply( x, 2, sd))
+  colnames( val_sd) <- paste0( colnames( val_sd), "_sd")
+  
+  descriptives <- cbind( val_mean, val_median, val_sd)
+
+  # perform model validation
+  results   <- purrr::pmap( list( mod, data_sets_val, t_val), validate_model)
+  results   <- bind_rows( results, .id = "censoring_mechanism")
+  results   <- cbind( psi, theta, sigma_epsilon, results, descriptives)
   
   return( results)
 }

@@ -46,11 +46,15 @@ ridge_mod <- glmnet( x = as.matrix( derivation_data[, c("age", "bmi", "fpg", "tg
 # inspect model
 coefficients( ridge_mod)
 
-# store cumulative baseline hazard at t_val
-# for average individual at time = t_val (i.e., for a single “pseudo” subject 
-# with covariate values equal to the means of the data set)
-obj_survfit <- survfit( ridge_mod, 
+# store cumulative baseline survival at t_val
+# for covariate values equal to zero at time = t_val 
+# covariate values are set to zero to avoid the need for centering of the linear 
+# predictor at validation
+obj_survfit <- survfit( ridge_mod,
                         x = as.matrix( derivation_data[, c("age", "bmi", "fpg", "tg")]),
-                        y = Surv( derivation_data$time, derivation_data$event))
+                        y = Surv( derivation_data$time, derivation_data$event),
+                        newx = as.matrix( data.frame( "age" = 0,
+                                                      "bmi" = 0,
+                                                      "fpg" = 0,
+                                                      "tg" = 0)))
 baseline_surv_tval <- summary( obj_survfit, times = t_val)$surv
-

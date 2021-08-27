@@ -72,8 +72,8 @@ t_val <- floor( 6 * 365.25)
 # Define scenarios of predictor measurement heterogeneity (pmh)
 # -----------------------------------------------------------------------------#
 psi        <- c( -1, -0.5, 0)
-theta      <- c( 0.8, 1)
-sd_epsilon <- c( 0, 1, 2)
+theta      <- c( 0.9, 1)
+sd_epsilon <- c( 0, 1, 1.5)
 
 scenarios  <- expand.grid( psi = psi,              # 18 scenarios
                            theta = theta,

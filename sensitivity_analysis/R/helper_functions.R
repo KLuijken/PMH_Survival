@@ -34,9 +34,8 @@ validate_model <- function(pred_names,
                            dataset,
                            t_val,
                            baseline_surv){
-  # compute centered linear predictor (prognostic index): important to center!
-  lp <- as.matrix(
-    apply(dataset[ , pred_names], 2, function(x) x - mean(x))) %*% pred_coefs
+  # compute centered linear predictor (prognostic index)
+  lp <- as.matrix( dataset[ , pred_names]) %*% pred_coefs
   
   # calibration in the large
   
@@ -220,7 +219,8 @@ plotting_data <- function( plot_data){
                 linetype = 2) +
     ylab( "O / E ratio at 6 years") +
     xlab( "Random measurement heterogeneity (sd of error term)") +
-    ylim( 0.7, 1.4) +
+    # ylim( 0.7, 1.4) +
+    ylim( 0.3, 1.4) +
     theme( legend.position = "none",
            axis.text=element_text(size=14, family="serif"),
            axis.title=element_text(size=16, family="serif")) 

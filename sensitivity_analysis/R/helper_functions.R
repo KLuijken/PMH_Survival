@@ -42,6 +42,7 @@ validate_model <- function(pred_names,
   # compute marginal predicted risk
   overall_surv <- baseline_surv ^ exp( lp)
   pred_risk <- 1 - overall_surv
+  
   marginal_pred_risk <- mean( pred_risk)
   
   # observed marginal risk
@@ -215,15 +216,23 @@ plotting_data <- function( plot_data){
     geom_ribbon( aes( ymax=y.upper, ymin=y.lower), fill="black", alpha=.5) +
     geom_ribbon( aes( ymax=up_ci, ymin=low_ci), fill="black", alpha=.1) +
     theme_classic() + 
-    geom_hline( yintercept = homogeneity_coordinate$cal_large,
-                linetype = 2) +
+    geom_hline( aes(yintercept= homogeneity_coordinate$cal_large,
+                    linetype = "Predictor measurement \nhomogeneity"), colour= "black") +
+    scale_linetype_manual(name = " ", values = 2, 
+                          guide = guide_legend( override.aes = list(color = c("black")))) +
     ylab( "O / E ratio at 6 years") +
-    xlab( "Random measurement heterogeneity (sd of error term)") +
-    # ylim( 0.7, 1.4) +
+    xlab( " ") +
     ylim( 0.3, 1.4) +
-    theme( legend.position = "none",
+    labs( title = "Calibration in the large") +
+    theme( legend.position = c(1.25, 1),
            axis.text=element_text(size=14, family="serif"),
-           axis.title=element_text(size=16, family="serif")) 
+           axis.title=element_text(size=20, family="serif"),
+           legend.text=element_text(size=20, family="serif"),
+           plot.title=element_text(size=26, family="serif", face = "bold"),
+           axis.title.y = element_text(angle=0),
+           axis.line = element_line(color = "#E5E5E5"),
+           axis.ticks = element_line(color = "#E5E5E5"),
+           plot.margin = unit(c(55, 220, 5.5, 5), "points")) 
   
   
   # prepare AUC(t) data
@@ -236,12 +245,18 @@ plotting_data <- function( plot_data){
     theme_classic() + 
     geom_hline( yintercept = homogeneity_coordinate$AUC_t,
                 linetype = 2) +
-    ylab( "AUC(t = 6 years)") +
-    xlab( "Random measurement heterogeneity (sd of error term)") +
+    ylab( "AUC(6 years)") +
+    xlab( "") +
     ylim( 0.8, 1)+
+    labs( title = "Discrimination") +
     theme( legend.position = "none",
            axis.text=element_text(size=14, family="serif"),
-           axis.title=element_text(size=16, family="serif")) 
+           axis.title=element_text(size=20, family="serif"),
+           plot.title=element_text(size=26, family="serif", face = "bold"),
+           axis.title.y = element_text(angle=0),
+           axis.line = element_line(color = "#E5E5E5"),
+           axis.ticks = element_line(color = "#E5E5E5"),
+           plot.margin = unit(c(55, 220, 5.5, 55), "points")) 
   
   # prepare IPA(t) data
   accuracy_dat <- prepare_plotting_data( input_data = plot_data,
@@ -254,24 +269,25 @@ plotting_data <- function( plot_data){
     theme_classic() + 
     geom_hline( yintercept = homogeneity_coordinate$IPA_t,
                 linetype = 2) +
-    ylab( "IPA(t = 6 years)") +
+    ylab( "IPA(6 years)") +
     xlab( "Random measurement heterogeneity (sd of error term)") +
     ylim( -0.05,0.2) +
+    labs( title = "Index of prediction accuracy") +
     theme( legend.position = "none",
            axis.text=element_text(size=14, family="serif"),
-           axis.title=element_text(size=16, family="serif")) 
+           axis.title=element_text(size=20, family="serif"),
+           plot.title=element_text(size=26, family="serif", face = "bold"),
+           axis.title.y = element_text(angle=0),
+           axis.line = element_line(color = "#E5E5E5"),
+           axis.ticks = element_line(color = "#E5E5E5"),
+           axis.title.x = element_text(margin = margin(t = 20)),
+           plot.margin = unit(c(55, 220, 5.5, 55), "points")) 
   
   # combine plots
   total_plot <- cowplot::plot_grid( plotlist = list( p1, p2, p3),
-                                    nrow = 1)
+                                    nrow = 3)
   
-  title <- cowplot::ggdraw() + cowplot::draw_label("Calibration in the large                                                        Discrimination                                                                      Index of prediction accuracy                          ", 
-                                                   fontfamily = "serif", fontface='bold', size = 20)
-  
-  total_plot  <- cowplot::plot_grid(title, total_plot, ncol=1, rel_heights=c(0.1, 1))
-  
-  
-  pdf("./plot/sensitivity_analysis_plot.pdf", width = 20, height = 6)
+  pdf("./plot/sensitivity_analysis_plot.pdf", width = 12, height = 20)
   print( total_plot)
   dev.off()
   
